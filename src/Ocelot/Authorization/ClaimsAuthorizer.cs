@@ -70,7 +70,7 @@
                     else
                     {
                         // static claim
-                        var authorized = values.Data.Contains(required.Value);
+                        var authorized = (required.Value == "*") ? values.Data.Any(d => !string.IsNullOrWhiteSpace(d)) : values.Data.Contains(required.Value);
                         if (!authorized)
                         {
                             return new ErrorResponse<bool>(new ClaimValueNotAuthorizedError(
