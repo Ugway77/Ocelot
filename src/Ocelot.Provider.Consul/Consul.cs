@@ -32,41 +32,42 @@
 
             foreach (var serviceEntry in queryResult.Response)
             {
-                if (IsValid(serviceEntry))
+                if (! IsValid(serviceEntry))
                 {
-                    var nodes = await _consul.Catalog.Nodes();
-                    if (nodes.Response == null)
-                    {
-                        services.Add(BuildService(serviceEntry, null));
-                    }
-                    else
-                    {
-                        var serviceNode = nodes.Response.FirstOrDefault(n => n.Address == serviceEntry.Service.Address);
-                        services.Add(BuildService(serviceEntry, serviceNode));
-                    }
+                    _logger.LogWarning($"Unable to use service Address: {GetServiceAddress(serviceEntry)} and Port: {serviceEntry.Service.Port} as it is invalid. Address must contain host only e.g. localhost and port must be greater than 0");
+                    continue;
                 }
-                else
-                {
-                    _logger.LogWarning($"Unable to use service Address: {serviceEntry.Service.Address} and Port: {serviceEntry.Service.Port} as it is invalid. Address must contain host only e.g. localhost and port must be greater than 0");
-                }
+
+                services.Add(BuildService(serviceEntry));
             }
 
             return services.ToList();
         }
 
-        private Service BuildService(ServiceEntry serviceEntry, Node serviceNode)
+        private Service BuildService(ServiceEntry serviceEntry)
         {
             return new Service(
                 serviceEntry.Service.Service,
-                new ServiceHostAndPort(serviceNode == null ? serviceEntry.Service.Address : serviceNode.Name, serviceEntry.Service.Port),
+                new ServiceHostAndPort(GetServiceAddress(serviceEntry), serviceEntry.Service.Port),
                 serviceEntry.Service.ID,
                 GetVersionFromStrings(serviceEntry.Service.Tags),
-                serviceEntry.Service.Tags ?? Enumerable.Empty<string>());
+                serviceEntry.Service.Tags ?? Enumerable.Empty<string>()
+            );
+        }
+
+        private static string GetServiceAddress(ServiceEntry serviceEntry)
+        {
+            return
+                string.IsNullOrWhiteSpace(serviceEntry.Service.Address) ||
+                serviceEntry.Service.Address.Equals("localhost", StringComparison.InvariantCultureIgnoreCase) ||
+                serviceEntry.Service.Address.Equals("127.0.0.1", StringComparison.InvariantCultureIgnoreCase)
+                ? serviceEntry.Node.Address
+                : serviceEntry.Service.Address;
         }
 
         private bool IsValid(ServiceEntry serviceEntry)
         {
-            if (string.IsNullOrEmpty(serviceEntry.Service.Address) || serviceEntry.Service.Address.Contains("http://") || serviceEntry.Service.Address.Contains("https://") || serviceEntry.Service.Port <= 0)
+            if (string.IsNullOrEmpty(GetServiceAddress(serviceEntry)) || serviceEntry.Service.Address.Contains("http://") || serviceEntry.Service.Address.Contains("https://") || serviceEntry.Service.Port <= 0)
             {
                 return false;
             }
