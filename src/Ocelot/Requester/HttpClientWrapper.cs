@@ -18,7 +18,7 @@ namespace Ocelot.Requester
 
         public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
         {
-            return Client.SendAsync(request, cancellationToken);
+            return Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         }
     }
 }
