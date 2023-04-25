@@ -17,8 +17,8 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Authors>Tom Pallister</Authors>
     <CodeAnalysisRuleSet>..\..\codeanalysis.ruleset</CodeAnalysisRuleSet>
-    <Version>17.0.5</Version>
-    <PackageReleaseNotes>Retreiving service address from Consul fixed. Validity check fixed</PackageReleaseNotes>
+    <Version>18.0.1</Version>
+    <PackageReleaseNotes>Moved to .NET6, keeping changes from original Ocelot</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugType>full</DebugType>
